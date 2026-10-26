@@ -1,0 +1,732 @@
+=====================================================================
+--  GAMING DATABASE MANAGEMENT  |  END-TO-END MYSQL PROJECT
+-- =====================================================================
+--  Contents:
+--    PART 1  : Database & Table Creation (schema)
+--    PART 2  : Sample Data (INSERT statements)
+--    PART 3  : Indexes
+--    PART 4  : Views
+--    PART 5  : Stored Procedures
+--    PART 6  : Triggers (+ supporting stock_log table)
+--    PART 7  : Query Bank - Level 1 (Original Q1-Q4)   + Answers
+--    PART 8  : Query Bank - Level 2 (Original Q5-Q8)   + Answers
+--    PART 9  : Query Bank - Level 3 (Original Q9-Q11)  + Answers
+--    PART 10 : Demo calls for Views / Procedures / Triggers
+
+
+============================================
+PART 1  : Database & Table Creation (schema)
+=============================================
+
+create database gaming_analytics;
+
+use  gaming_analytics;
+
+create table gamers(
+gamer_id int primary key,
+gamer_name varchar(50) NOT NULL,
+gamer_username varchar(50) unique not null,
+gamer_email varchar(50) unique,
+country varchar(50),
+registration_date Date not null
+);
+desc gamers;
+ select*from gamers;
+ 
+ 
+ 
+ create table games(
+ gamer_id int primary key,
+ game_title varchar(50) not null,
+ developer_name varchar(100) not null,
+ release_date date,
+ price decimal(10,2),
+ age_rate varchar(10)
+ );
+ desc games;
+ select*from games;
+ 
+ create table genres(
+ genre_id int primary key,
+ genre_name varchar(50) unique not null,
+ genre_description varchar(200)
+ );
+ desc genres;
+ select*from genres;
+ 
+ 
+ create table platforms(
+ platform_id int primary key,
+ platform_name varchar(50) unique not null,
+ manufacturer varchar(100)
+ );
+ desc platforms;
+ select*from platforms;
+ 
+ 
+create table game_reviews(
+review_id int primary key,
+gamer_id int,
+game_id int,
+rating int,
+review_text varchar(500),
+review_date date not null,
+foreign key(gamer_id) references gamers(gamer_id),
+foreign key(game_id) references games(game_id)
+);
+desc game_reviews;
+select*from game_reviews;
+alter table games rename column  gamer_id to game_id;
+
+
+
+create table game_genres(
+game_id int,
+genre_id int,
+primary key(game_id,genre_id),
+foreign key(game_id) references games(game_id),
+foreign key(genre_id) references genres(genre_id)
+);
+desc game_genres;
+select*from game_genres;
+
+
+create table game_platforms(
+game_id int,
+platform_id int,
+primary key(game_id, platform_id),
+foreign key(game_id) references games(game_id),
+foreign key(platform_id) references platforms(platform_id)
+);
+desc game_platforms;
+select*from game_platforms;
+
+
+create table achievements(
+achievement_id int primary key,
+gamer_id int,
+game_id int,
+achievement_name varchar(200) not null,
+foreign key(gamer_id) references gamers(gamer_id),
+foreign key(game_id) references games(game_id)
+);
+desc achievements;
+select*from achievements;
+
+
+==========================================
+PART 2  : Sample Data (INSERT statements)
+===========================================
+
+INSERT INTO gamers VALUES
+(1, 'Vijay', 'VijayGamer', 'vijay@example.com', 'India', '2026-01-10'),
+(2, 'Rahul', 'ShadowX', 'rahul@example.com', 'India', '2026-02-15'),
+(3, 'Arjun', 'DragonKing', 'arjun@example.com', 'USA', '2026-03-20'),
+(4, 'Priya', 'PixelQueen', 'priya@example.com', 'India', '2026-04-05'),
+(5, 'John', 'ProGamer', 'john@example.com', 'UK', '2026-05-12'),
+(6, 'Kenji', 'NinjaPlay', 'kenji@example.com', 'Japan', '2026-06-18');
+select*from gamers;
+
+INSERT INTO games VALUES
+(101, 'GTA V', 'Rockstar Games', '2013-09-17', 1499.00, 'M'),
+(102, 'Resident Evil 2', 'Capcom', '2019-01-25', 1299.00, 'M'),
+(103, 'God of War', 'Santa Monica Studio', '2018-04-20', 1999.00, 'M'),
+(104, 'Minecraft', 'Mojang Studios', '2011-11-18', 899.00, 'E'),
+(105, 'The Witcher 3', 'CD Projekt Red', '2015-05-19', 1599.00, 'M'),
+(106, 'Forza Horizon 5', 'Playground Games', '2021-11-09', 2499.00, 'E10+');
+select*from games;
+
+INSERT INTO genres VALUES
+(1, 'Action', 'Combat and physical challenges'),
+(2, 'Adventure', 'Exploration and storytelling'),
+(3, 'Horror', 'Fear and suspense'),
+(4, 'Racing', 'Competitive vehicle racing'),
+(5, 'RPG', 'Role-playing and character progression'),
+(6, 'Sports', 'Games based on sporting activities');
+select*from genres;
+
+INSERT INTO platforms VALUES
+(1, 'PlayStation 5', 'Sony'),
+(2, 'PlayStation 4', 'Sony'),
+(3, 'Xbox Series X', 'Microsoft'),
+(4, 'Xbox One', 'Microsoft'),
+(5, 'PC', 'Multiple'),
+(6, 'Nintendo Switch', 'Nintendo');
+select*from platforms;
+
+INSERT INTO game_reviews VALUES
+(1, 1, 101, 9, 'Excellent open-world gameplay', '2026-06-01'),
+(2, 2, 101, 8, 'Great game with lots of activities', '2026-06-05'),
+(3, 3, 102, 10, 'Amazing survival horror experience', '2026-06-10'),
+(4, 4, 103, 9, 'Excellent combat and storytelling', '2026-06-15'),
+(5, 5, 104, 8, 'Fun game with creative freedom', '2026-06-20'),
+(6, 6, 105, 10, 'Outstanding story and world design', '2026-06-25');
+select*from game_reviews;
+
+INSERT INTO game_genres VALUES
+(101, 1),
+(101, 2),
+(102, 3),
+(103, 1),
+(103, 2),
+(104, 5);
+select*from game_genres;
+
+INSERT INTO game_platforms VALUES
+(101, 1),
+(101, 5),
+(102, 1),
+(102, 2),
+(103, 1),
+(104, 6);
+select*from game_platforms;
+
+INSERT INTO achievements VALUES
+(1, 1, 101, 'Mission Master'),
+(2, 1, 101, 'Explorer'),
+(3, 2, 102, 'Survivor'),
+(4, 3, 103, 'Warrior'),
+(5, 4, 104, 'Master Builder'),
+(6, 2, 105, 'Monster Slayer');
+select*from achievements;
+
+show tables; 
+
+
+==================
+PART 3  : Indexes
+================== 
+
+CREATE INDEX idx_gamers_country ON gamers(country);
+
+CREATE INDEX idx_games_title ON games(game_title);
+
+CREATE INDEX idx_genres_name ON genres(genre_name);
+
+CREATE INDEX idx_platforms_name ON platforms(platform_name);
+
+CREATE INDEX idx_reviews_rating ON game_reviews(rating);
+
+CREATE INDEX idx_game_genres_genre ON game_genres(genre_id);
+
+CREATE INDEX idx_game_platforms_platform ON game_platforms(platform_id);
+
+CREATE INDEX idx_achievements_gamer ON achievements(gamer_id);
+
+show index from gamers;
+
+show index from games;
+
+show index from genres;
+
+show index from platforms;
+
+show index from game_reviews;
+
+show index from game_genres;
+
+show index from game_platforms;
+
+show index from achievements;
+
+
+================
+PART 4  : Views
+=================
+
+CREATE OR REPLACE VIEW view_game_details AS
+SELECT
+    game_id,
+    game_title,
+    developer_name,
+    release_date,
+    price,
+    age_rate
+FROM games;
+
+select*from view_game_details;
+
+CREATE OR REPLACE VIEW view_gamer_reviews AS
+SELECT
+    gm.gamer_id,
+    gm.gamer_name,
+    g.game_title,
+    r.rating,
+    r.review_text,
+    r.review_date
+FROM game_reviews r
+JOIN gamers gm
+    ON r.gamer_id = gm.gamer_id
+JOIN games g
+    ON r.game_id = g.game_id;
+    
+    SELECT * FROM view_gamer_reviews;
+    
+CREATE OR REPLACE VIEW view_game_rating_summary AS
+SELECT
+    g.game_id,
+    g.game_title,
+    COUNT(r.review_id) AS total_reviews,
+    ROUND(AVG(r.rating), 2) AS avg_rating
+FROM games g
+LEFT JOIN game_reviews r
+    ON g.game_id = r.game_id
+GROUP BY g.game_id, g.game_title;
+
+SELECT * FROM view_game_rating_summary;
+
+CREATE OR REPLACE VIEW view_gamer_achievement_summary AS
+SELECT
+    gm.gamer_id,
+    gm.gamer_name,
+    COUNT(a.achievement_id) AS total_achievements
+FROM gamers gm
+LEFT JOIN achievements a
+    ON gm.gamer_id = a.gamer_id
+GROUP BY gm.gamer_id, gm.gamer_name;
+
+SELECT * FROM view_gamer_achievement_summary;
+
+
+=============================
+PART 5  : Stored Procedures
+=============================
+
+
+DROP PROCEDURE IF EXISTS sp_games_by_genre;
+DELIMITER $$
+CREATE PROCEDURE sp_games_by_genre(IN p_genre_id INT)
+BEGIN
+    SELECT g.game_id, g.game_title, g.developer_name,
+           g.release_date, g.price, g.age_rating
+    FROM games g
+    JOIN game_genres gg ON g.game_id = gg.game_id
+    WHERE gg.genre_id = p_genre_id
+    ORDER BY g.release_date DESC;
+END $$
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_game_rating_summary;
+DELIMITER $$
+CREATE PROCEDURE sp_game_rating_summary(IN p_game_id INT)
+BEGIN
+    SELECT g.game_title,
+           COUNT(r.review_id) AS total_reviews,
+           ROUND(AVG(r.rating), 2) AS avg_rating
+    FROM games g
+    LEFT JOIN game_reviews r ON g.game_id = r.game_id
+    WHERE g.game_id = p_game_id
+    GROUP BY g.game_id, g.game_title;
+END $$
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_add_game_review;
+DELIMITER $$
+CREATE PROCEDURE sp_add_game_review(
+    IN p_gamer_id INT,
+    IN p_game_id INT,
+    IN p_rating INT,
+    IN p_review_text VARCHAR(500),
+    IN p_review_date DATE
+)
+BEGIN
+    IF p_rating < 1 OR p_rating > 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Rating must be between 1 and 10';
+    ELSE
+        INSERT INTO game_reviews
+            (gamer_id, game_id, rating, review_text, review_date)
+        VALUES
+            (p_gamer_id, p_game_id, p_rating, p_review_text, p_review_date);
+    END IF;
+END $$
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_achievements_by_gamer;
+DELIMITER $$
+CREATE PROCEDURE sp_achievements_by_gamer(IN p_gamer_id INT)
+BEGIN
+    SELECT gm.gamer_name, g.game_title, a.achievement_name
+    FROM achievements a
+    JOIN gamers gm ON a.gamer_id = gm.gamer_id
+    JOIN games g ON a.game_id = g.game_id
+    WHERE a.gamer_id = p_gamer_id
+    ORDER BY g.game_title;
+END $$
+DELIMITER ;
+
+
+
+===================
+PART 6  : Triggers
+====================
+
+DROP TRIGGER IF EXISTS trg_validate_review_rating;
+DELIMITER $$
+CREATE TRIGGER trg_validate_review_rating
+BEFORE INSERT ON game_reviews
+FOR EACH ROW
+BEGIN
+    IF NEW.rating < 1 OR NEW.rating > 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Rating must be between 1 and 10';
+    END IF;
+END $$
+DELIMITER ;
+
+
+DROP TRIGGER IF EXISTS trg_validate_game_price;
+DELIMITER $$
+CREATE TRIGGER trg_validate_game_price
+BEFORE INSERT ON games
+FOR EACH ROW
+BEGIN
+    IF NEW.price < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Game price cannot be negative';
+    END IF;
+END $$
+DELIMITER ;
+
+
+
+DROP TRIGGER IF EXISTS trg_validate_game_price_update;
+DELIMITER $$
+CREATE TRIGGER trg_validate_game_price_update
+BEFORE UPDATE ON games
+FOR EACH ROW
+BEGIN
+    IF NEW.price < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Game price cannot be negative';
+    END IF;
+END $$
+DELIMITER ;
+
+
+DROP TRIGGER IF EXISTS trg_prevent_gamer_delete;
+DELIMITER $$
+CREATE TRIGGER trg_prevent_gamer_delete
+BEFORE DELETE ON gamers
+FOR EACH ROW
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM game_reviews
+        WHERE gamer_id = OLD.gamer_id
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT =
+            'Cannot delete gamer who has submitted reviews';
+    END IF;
+END $$
+DELIMITER ;
+
+
+===========================================
+PART 7  : Query Bank - Level 1 + Answers
+============================================
+Q1. Display the names and usernames of all gamers.
+SELECT gamer_name, gamer_username
+FROM gamers;
++------------+----------------+
+| gamer_name | gamer_username |
++------------+----------------+
+| Vijay      | VijayGamer     |
+| Rahul      | ShadowX        |
+| Arjun      | DragonKing     |
+| Priya      | PixelQueen     |
+| John       | ProGamer       |
+| Kenji      | NinjaPlay      |
++------------+----------------+
+
+Q2. Display the games whose prices are greater than ₹1,000.
+SELECT game_id, game_title, price
+FROM games
+WHERE price > 1000;
++---------+-----------------+---------+
+| game_id | game_title      | price   |
++---------+-----------------+---------+
+|     101 | GTA V           | 1499.00 |
+|     102 | Resident Evil 2 | 1299.00 |
+|     103 | God of War      | 1999.00 |
+|     105 | The Witcher 3   | 1599.00 |
+|     106 | Forza Horizon 5 | 2499.00 |
++---------+-----------------+---------+
+
+Q3. Display all games with their developer names and release dates, sorted from newest to oldest.
+SELECT game_id, game_title, developer_name, release_date
+FROM games
+ORDER BY release_date DESC;
++---------+-----------------+---------------------+--------------+
+| game_id | game_title      | developer_name      | release_date |
++---------+-----------------+---------------------+--------------+
+|     106 | Forza Horizon 5 | Playground Games    | 2021-11-09   |
+|     102 | Resident Evil 2 | Capcom              | 2019-01-25   |
+|     103 | God of War      | Santa Monica Studio | 2018-04-20   |
+|     105 | The Witcher 3   | CD Projekt Red      | 2015-05-19   |
+|     101 | GTA V           | Rockstar Games      | 2013-09-17   |
+|     104 | Minecraft       | Mojang Studios      | 2011-11-18   |
++---------+-----------------+---------------------+--------------+
+
+==========================================
+ PART 8  : Query Bank - Level 2 + Answers
+==========================================
+Q4. Calculate the total number of reviews and average rating for each game, including games that have no reviews.
+SELECT g.game_title,
+       COUNT(r.review_id) AS total_reviews,
+       ROUND(AVG(r.rating), 2) AS avg_rating
+FROM games g
+LEFT JOIN game_reviews r
+    ON g.game_id = r.game_id
+GROUP BY g.game_id, g.game_title;
++-----------------+---------------+------------+
+| game_title      | total_reviews | avg_rating |
++-----------------+---------------+------------+
+| Forza Horizon 5 |             0 |       NULL |
+| God of War      |             1 |       9.00 |
+| GTA V           |             2 |       8.50 |
+| Minecraft       |             1 |       8.00 |
+| Resident Evil 2 |             1 |      10.00 |
+| The Witcher 3   |             1 |      10.00 |
++-----------------+---------------+------------+
+
+Q5. Display each game along with its associated genre names.
+SELECT g.game_title, ge.genre_name
+FROM games g
+JOIN game_genres gg
+    ON g.game_id = gg.game_id
+JOIN genres ge
+    ON gg.genre_id = ge.genre_id
+ORDER BY g.game_title;
++-----------------+------------+
+| game_title      | genre_name |
++-----------------+------------+
+| God of War      | Action     |
+| God of War      | Adventure  |
+| GTA V           | Action     |
+| GTA V           | Adventure  |
+| Minecraft       | RPG        |
+| Resident Evil 2 | Horror     |
++-----------------+------------+
+
+Q6. Count the total achievements earned by each gamer,
+ including gamers who have not earned any achievements,
+ and sort the results in descending order.
+ 
+SELECT gm.gamer_name,
+       COUNT(a.achievement_id) AS total_achievements
+FROM gamers gm
+LEFT JOIN achievements a
+    ON gm.gamer_id = a.gamer_id
+GROUP BY gm.gamer_id, gm.gamer_name
+ORDER BY total_achievements DESC;
++------------+--------------------+
+| gamer_name | total_achievements |
++------------+--------------------+
+| Vijay      |                  2 |
+| Rahul      |                  2 |
+| Arjun      |                  1 |
+| Priya      |                  1 |
+| John       |                  0 |
+| Kenji      |                  0 |
++------------+--------------------+
+
+=========================================
+PART 9  : Query Bank - Level 3 + Answers
+==========================================
+Q7. Find the top three games based on average review ratings,
+ displaying their average ratings and total review counts.
+ 
+SELECT g.game_title,
+       ROUND(AVG(r.rating), 2) AS avg_rating,
+       COUNT(r.review_id) AS total_reviews
+FROM games g
+JOIN game_reviews r
+    ON g.game_id = r.game_id
+GROUP BY g.game_id, g.game_title
+ORDER BY avg_rating DESC, total_reviews DESC
+LIMIT 3;
++-----------------+------------+---------------+
+| game_title      | avg_rating | total_reviews |
++-----------------+------------+---------------+
+| Resident Evil 2 |      10.00 |             1 |
+| The Witcher 3   |      10.00 |             1 |
+| God of War      |       9.00 |             1 |
++-----------------+------------+---------------+
+
+Q8. Display games whose average review rating is greater than 8,
+ sorted by average rating in descending order.
+SELECT g.game_title,
+       ROUND(AVG(r.rating), 2) AS avg_rating
+FROM games g
+JOIN game_reviews r
+    ON g.game_id = r.game_id
+GROUP BY g.game_id, g.game_title
+HAVING AVG(r.rating) > 8
+ORDER BY avg_rating DESC;
++-----------------+------------+
+| game_title      | avg_rating |
++-----------------+------------+
+| Resident Evil 2 |      10.00 |
+| The Witcher 3   |      10.00 |
+| God of War      |       9.00 |
+| GTA V           |       8.50 |
++-----------------+------------+
+
+Q9. Display detailed review information,
+ including the review ID, gamer name, username, game title, developer name, rating, review text, 
+and review date, sorted by the most recent reviews first.
+SELECT
+    r.review_id,
+    gm.gamer_name,
+    gm.gamer_username,
+    g.game_title,
+    g.developer_name,
+    r.rating,
+    r.review_text,
+    r.review_date
+FROM game_reviews r
+JOIN gamers gm
+    ON r.gamer_id = gm.gamer_id
+JOIN games g
+    ON r.game_id = g.game_id
+ORDER BY r.review_date DESC;
++-----------+------------+----------------+-----------------+---------------------+--------+------------------------------------+-------------+
+| review_id | gamer_name | gamer_username | game_title      | developer_name      | rating | review_text                        | review_date |
++-----------+------------+----------------+-----------------+---------------------+--------+------------------------------------+-------------+
+|         6 | Kenji      | NinjaPlay      | The Witcher 3   | CD Projekt Red      |     10 | Outstanding story and world design | 2026-06-25  |
+|         5 | John       | ProGamer       | Minecraft       | Mojang Studios      |      8 | Fun game with creative freedom     | 2026-06-20  |
+|         4 | Priya      | PixelQueen     | God of War      | Santa Monica Studio |      9 | Excellent combat and storytelling  | 2026-06-15  |
+|         3 | Arjun      | DragonKing     | Resident Evil 2 | Capcom              |     10 | Amazing survival horror experience | 2026-06-10  |
+|         2 | Rahul      | ShadowX        | GTA V           | Rockstar Games      |      8 | Great game with lots of activities | 2026-06-05  |
+|         1 | Vijay      | VijayGamer     | GTA V           | Rockstar Games      |      9 | Excellent open-world gameplay      | 2026-06-01  |
++-----------+------------+----------------+-----------------+---------------------+--------+------------------------------------+-------------+
+
+=======================================================
+PART 10 : Demo calls for Views / Procedures / Triggers
+========================================================
+A. Views
+Q10. Display all game details stored in the view_game_details view.
+
+SELECT * FROM view_game_details;
++---------+-----------------+---------------------+--------------+---------+----------+
+| game_id | game_title      | developer_name      | release_date | price   | age_rate |
++---------+-----------------+---------------------+--------------+---------+----------+
+|     101 | GTA V           | Rockstar Games      | 2013-09-17   | 1499.00 | M        |
+|     102 | Resident Evil 2 | Capcom              | 2019-01-25   | 1299.00 | M        |
+|     103 | God of War      | Santa Monica Studio | 2018-04-20   | 1999.00 | M        |
+|     104 | Minecraft       | Mojang Studios      | 2011-11-18   |  899.00 | E        |
+|     105 | The Witcher 3   | CD Projekt Red      | 2015-05-19   | 1599.00 | M        |
+|     106 | Forza Horizon 5 | Playground Games    | 2021-11-09   | 2499.00 | E10+     |
++---------+-----------------+---------------------+--------------+---------+----------+
+
+Q11. Display gamer reviews using the view_gamer_reviews view.
+SELECT * FROM view_gamer_reviews;
++----------+------------+-----------------+--------+------------------------------------+-------------+
+| gamer_id | gamer_name | game_title      | rating | review_text                        | review_date |
++----------+------------+-----------------+--------+------------------------------------+-------------+
+|        1 | Vijay      | GTA V           |      9 | Excellent open-world gameplay      | 2026-06-01  |
+|        2 | Rahul      | GTA V           |      8 | Great game with lots of activities | 2026-06-05  |
+|        3 | Arjun      | Resident Evil 2 |     10 | Amazing survival horror experience | 2026-06-10  |
+|        4 | Priya      | God of War      |      9 | Excellent combat and storytelling  | 2026-06-15  |
+|        5 | John       | Minecraft       |      8 | Fun game with creative freedom     | 2026-06-20  |
+|        6 | Kenji      | The Witcher 3   |     10 | Outstanding story and world design | 2026-06-25  |
++----------+------------+-----------------+--------+------------------------------------+-------------+
+
+Q12. Display the total number of reviews and average rating for each game using the view_game_rating_summary view.
+SELECT * FROM view_game_rating_summary;
++---------+-----------------+---------------+------------+
+| game_id | game_title      | total_reviews | avg_rating |
++---------+-----------------+---------------+------------+
+|     106 | Forza Horizon 5 |             0 |       NULL |
+|     103 | God of War      |             1 |       9.00 |
+|     101 | GTA V           |             2 |       8.50 |
+|     104 | Minecraft       |             1 |       8.00 |
+|     102 | Resident Evil 2 |             1 |      10.00 |
+|     105 | The Witcher 3   |             1 |      10.00 |
++---------+-----------------+---------------+------------+
+
+Q13. Display the total number of achievements earned by each gamer using the view_gamer_achievement_summary view.
+SELECT * FROM view_gamer_achievement_summary;
++----------+------------+--------------------+
+| gamer_id | gamer_name | total_achievements |
++----------+------------+--------------------+
+|        1 | Vijay      |                  2 |
+|        2 | Rahul      |                  2 |
+|        3 | Arjun      |                  1 |
+|        4 | Priya      |                  1 |
+|        5 | John       |                  0 |
+|        6 | Kenji      |                  0 |
++----------+------------+--------------------+
+
+
+B. Stored Procedures
+Q14. Retrieve all games belonging to the genre with genre ID 1 using the sp_games_by_genre stored procedure.
+CALL sp_games_by_genre(1);
++---------+------------+---------------------+--------------+---------+----------+
+| game_id | game_title | developer_name      | release_date | price   | age_rate |
++---------+------------+---------------------+--------------+---------+----------+
+|     103 | God of War | Santa Monica Studio | 2018-04-20   | 1999.00 | M        |
+|     101 | GTA V      | Rockstar Games      | 2013-09-17   | 1499.00 | M        |
++---------+------------+---------------------+--------------+---------+----------+
+
+
+Q15. Display the total number of reviews and average rating for the game with game ID 101 using the sp_game_rating_summary stored procedure.
+CALL sp_game_rating_summary(101);
++------------+---------------+------------+
+| game_title | total_reviews | avg_rating |
++------------+---------------+------------+
+| GTA V      |             3 |       8.67 |
++------------+---------------+------------+
+
+
+Q16. Add a new review for the game with ID 101, submitted by the gamer with ID 1, using the sp_add_game_review stored procedure.
+CALL sp_add_game_review(
+    7,                                  
+    1,                                  
+    101,                                
+    9,                                  
+    'Excellent gameplay and graphics',  
+    '2026-10-25'                        
+);
+OK, 1 row affected (0.02 sec)
+ SELECT * FROM game_reviews ORDER BY review_id DESC LIMIT 1;
+ +-----------+----------+---------+--------+---------------------------------+-------------+
+| review_id | gamer_id | game_id | rating | review_text                     | review_date |
++-----------+----------+---------+--------+---------------------------------+-------------+
+|         7 |        1 |     101 |      9 | Excellent gameplay and graphics | 2026-10-25  |
++-----------+----------+---------+--------+---------------------------------+-------------+
+
+Q17. Retrieve all achievements earned by the gamer with gamer ID 1 using the sp_achievements_by_gamer stored procedure.
+CALL sp_achievements_by_gamer(1);
++------------+------------+------------------+
+| gamer_name | game_title | achievement_name |
++------------+------------+------------------+
+| Vijay      | GTA V      | Mission Master   |
+| Vijay      | GTA V      | Explorer         |
++------------+------------+------------------+
+
+
+C. Trigger Demonstrations
+Q18. Test the review rating validation trigger by attempting to insert a review with a rating of 11.
+ INSERT INTO game_reviews
+   VALUES (902, 1, 101, 11, 'Testing invalid rating', '2026-10-26');
+Expected Output:
+ERROR 1644 (45000): Rating must be between 1 and 10
+
+Q19. Test the review rating validation trigger by inserting a review with a valid rating of 9.
+INSERT INTO game_reviews
+       VALUES (901, 1, 101, 9, 'Excellent gameplay', '2026-10-26');
+Query OK, 1 row affected (0.01 sec)
+
+SELECT * FROM game_reviews WHERE review_id = 901;
++-----------+----------+---------+--------+--------------------+-------------+
+| review_id | gamer_id | game_id | rating | review_text        | review_date |
++-----------+----------+---------+--------+--------------------+-------------+
+|       901 |        1 |     101 |      9 | Excellent gameplay | 2026-10-26  |
++-----------+----------+---------+--------+--------------------+-------------+
+1 row in set (0.00 sec)
